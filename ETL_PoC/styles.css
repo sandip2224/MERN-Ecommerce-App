@@ -1,0 +1,32 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.loading {
+  display: none;
+  font-size: 18px;
+  margin-top: 20px;
+}
+
+.table {
+  display: none;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  border: 1px solid black;
+  padding: 8px;
+}
