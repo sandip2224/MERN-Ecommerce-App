@@ -12,84 +12,79 @@ let currentSchema = [];
 goButton.addEventListener("click", fetchData);
 
 pagination.addEventListener("click", (event) => {
-    if (event.target.classList.contains("page-link")) {
-        currentPage = parseInt(event.target.dataset.page);
-        displayData();
-    }
+  if (event.target.classList.contains("page-link")) {
+    currentPage = parseInt(event.target.dataset.page);
+    displayData();
+  }
 });
 
 function fetchData() {
-    const selectedTable = tableDropdown.value;
-    loading.style.display = "block";
-    table.style.display = "none";
+  const selectedTable = tableDropdown.value;
+  loading.style.display = "block";
+  table.style.display = "none";
 
-    // Replace this with your actual API endpoint URL
-    const apiUrl = `/api/${selectedTable}/`;
+  // Replace this with your actual API endpoint URL
+  const apiUrl = `/api/${selectedTable}/`;
 
-    fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-            currentData = data.data;
-            currentSchema = data.schema;
-            currentPage = 1;
-            loading.style.display = "none";
-            displayData();
-        })
-        .catch(error => {
-            console.error("Error fetching data:", error);
-            loading.style.display = "none";
-        });
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      currentData = data.data;
+      currentSchema = Object.keys(data.data[0]); // Generate schema from keys of the first data row
+      currentPage = 1;
+      loading.style.display = "none";
+      displayData();
+    })
+    .catch(error => {
+      console.error("Error fetching data:", error);
+      loading.style.display = "none";
+    });
 }
 
 function displayData() {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const itemsToDisplay = currentData.slice(startIndex, endIndex);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const itemsToDisplay = currentData.slice(startIndex, endIndex);
 
-    table.innerHTML = generateTableHtml(itemsToDisplay);
-    table.style.display = "block";
-    generatePagination();
+  table.innerHTML = generateTableHtml(itemsToDisplay);
+  table.style.display = "block";
+  generatePagination();
 }
 
 function generateTableHtml(data) {
-    let html = "<tr>";
+  let html = "<tr>";
+  currentSchema.forEach(column => {
+    html += `<th>${column}</th>`;
+  });
+  html += "</tr>";
+
+  data.forEach(item => {
+    html += "<tr>";
     currentSchema.forEach(column => {
-        html += `<th>${column}</th>`;
+      html += `<td>${item[column]}</td>`;
     });
     html += "</tr>";
+  });
 
-    data.forEach(item => {
-        html += "<tr>";
-        currentSchema.forEach(column => {
-            html += `<td>${item[column]}</td>`;
-        });
-        html += "</tr>";
-    });
-
-    return html;
+  return html;
 }
 
 function generatePagination() {
-    const totalPages = Math.ceil(currentData.length / itemsPerPage);
-    let paginationHtml = `<li class="page-item ${
-        currentPage === 1 ? "disabled" : ""
-    }"><a class="page-link" href="#" data-page="${
-        currentPage - 1
+  const totalPages = Math.ceil(currentData.length / itemsPerPage);
+  let paginationHtml = `<li class="page-item ${currentPage === 1 ? "disabled" : ""
+    }"><a class="page-link" href="#" data-page="${currentPage - 1
     }">Previous</a></li>`;
 
-    for (let page = 1; page <= totalPages; page++) {
-        paginationHtml += `<li class="page-item ${
-            currentPage === page ? "active" : ""
-        }"><a class="page-link" href="#" data-page="${page}">${page}</a></li>`;
-    }
+  for (let page = 1; page <= totalPages; page++) {
+    paginationHtml += `<li class="page-item ${currentPage === page ? "active" : ""
+      }"><a class="page-link" href="#" data-page="${page}">${page}</a></li>`;
+  }
 
-    paginationHtml += `<li class="page-item ${
-        currentPage === totalPages ? "disabled" : ""
-    }"><a class="page-link" href="#" data-page="${
-        currentPage + 1
+  paginationHtml += `<li class="page-item ${currentPage === totalPages ? "disabled" : ""
+    }"><a class="page-link" href="#" data-page="${currentPage + 1
     }">Next</a></li>`;
 
-    pagination.innerHTML = paginationHtml;
+  pagination.innerHTML = paginationHtml;
 }
 
 // Initial fetch when the page loads
