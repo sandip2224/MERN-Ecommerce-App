@@ -10,6 +10,13 @@ const logAndRetry = (requestData, updateTable, signal, retryCount) => {
 };
 
 const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
+  if (!requestData) {
+    console.log(`Request data is null or undefined. Skipping this request.`);
+    // Proceed to the next iteration
+    processNextRequest(requestQueue, i + 1, updateTable, signal);
+    return;
+  }
+
   const portfolioReqList = requestData.portfolioReqList;
   APIService({ portfolioReqList }, apiConfig.portfolioAdvanceDetailEndpoint, undefined, true, false, signal)
     .then(response => {
@@ -39,7 +46,7 @@ const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
 
 const processNextRequest = (requestQueue, i, updateTable, signal) => {
   if (i < requestQueue?.length) {
-    makeRequest(requestQueue[i], updateTable, signal);
+    makeRequest(requestQueue?.[i], updateTable, signal);
   }
 };
 
