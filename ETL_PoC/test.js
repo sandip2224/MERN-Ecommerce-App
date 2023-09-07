@@ -15,6 +15,8 @@ const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
     .then(response => {
       console.log(`Request succeeded for request data:`, requestData);
       updateTable(requestData, response);
+      // Proceed to the next iteration on success
+      processNextRequest(requestQueue, i + 1, updateTable, signal);
     })
     .catch(error => {
       if (retryCount < MAX_RETRY_COUNT) {
@@ -29,12 +31,18 @@ const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
           }
         };
         updateTable(requestData, errorValue);
+        // Proceed to the next iteration after max retries
+        processNextRequest(requestQueue, i + 1, updateTable, signal);
       }
     });
 };
 
-const backupAdvanceDetail = (requestQueue, updateTable, signal) => {
-  for (let i = 0; i < requestQueue?.length; i += 1) {
-    makeRequest(requestQueue?.[i], updateTable, signal);
+const processNextRequest = (requestQueue, i, updateTable, signal) => {
+  if (i < requestQueue?.length) {
+    makeRequest(requestQueue[i], updateTable, signal);
   }
+};
+
+const backupAdvanceDetail = (requestQueue, updateTable, signal) => {
+  processNextRequest(requestQueue, 0, updateTable, signal);
 };
