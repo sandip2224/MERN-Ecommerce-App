@@ -1,36 +1,37 @@
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAY_MS = 1000; // Adjust this delay as needed (in milliseconds)
 
-const logAndRetry = (requestData, updateTable, signal, retryCount) => {
-  console.log(`Request failed for request data:`, requestData);
+const logAndRetry = (i, updateTable, signal, retryCount) => {
+  console.log(`Iteration ${i}: Request failed`);
   console.log(`Retrying in ${RETRY_DELAY_MS} milliseconds... Retry count: ${retryCount + 1}`);
   
   // Retry after a delay
-  setTimeout(() => makeRequest(requestData, updateTable, signal, retryCount + 1), RETRY_DELAY_MS);
+  setTimeout(() => makeRequest(i, updateTable, signal, retryCount + 1), RETRY_DELAY_MS);
 };
 
-const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
+const makeRequest = (i, updateTable, signal, retryCount = 0) => {
+  const requestData = requestQueue?.[i];
   if (!requestData) {
-    console.log(`Request data is null or undefined. Skipping this request.`);
+    console.log(`Iteration ${i}: Request data is null or undefined. Skipping this request.`);
     // Proceed to the next iteration
-    processNextRequest(requestQueue, i + 1, updateTable, signal);
+    processNextRequest(i + 1, updateTable, signal);
     return;
   }
 
   const portfolioReqList = requestData.portfolioReqList;
   APIService({ portfolioReqList }, apiConfig.portfolioAdvanceDetailEndpoint, undefined, true, false, signal)
     .then(response => {
-      console.log(`Request succeeded for request data:`, requestData);
+      console.log(`Iteration ${i}: Request succeeded`);
       updateTable(requestData, response);
       // Proceed to the next iteration on success
-      processNextRequest(requestQueue, i + 1, updateTable, signal);
+      processNextRequest(i + 1, updateTable, signal);
     })
     .catch(error => {
       if (retryCount < MAX_RETRY_COUNT) {
-        logAndRetry(requestData, updateTable, signal, retryCount);
+        logAndRetry(i, updateTable, signal, retryCount);
       } else {
         // Handle the error after max retries
-        console.log(`Max retry count reached for request data:`, requestData);
+        console.log(`Iteration ${i}: Max retry count reached`);
         const errorValue = {
           response: {
             measureValue: "ERROR",
@@ -39,17 +40,17 @@ const makeRequest = (requestData, updateTable, signal, retryCount = 0) => {
         };
         updateTable(requestData, errorValue);
         // Proceed to the next iteration after max retries
-        processNextRequest(requestQueue, i + 1, updateTable, signal);
+        processNextRequest(i + 1, updateTable, signal);
       }
     });
 };
 
-const processNextRequest = (requestQueue, i, updateTable, signal) => {
+const processNextRequest = (i, updateTable, signal) => {
   if (i < requestQueue?.length) {
-    makeRequest(requestQueue?.[i], updateTable, signal);
+    makeRequest(i, updateTable, signal);
   }
 };
 
 const backupAdvanceDetail = (requestQueue, updateTable, signal) => {
-  processNextRequest(requestQueue, 0, updateTable, signal);
+  processNextRequest(0, updateTable, signal);
 };
